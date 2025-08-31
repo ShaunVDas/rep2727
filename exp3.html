@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Meme Gallery</title>
+
+  <style>
+    /* --- Reset & base --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html,body { height: 100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f6f7fb; color:#222; }
+
+    /* --- Header --- */
+    header {
+      background: linear-gradient(90deg,#3a3f98,#6b7bd8);
+      color: #fff;
+      padding: 28px 16px;
+      text-align: center;
+      box-shadow: 0 3px 8px rgba(30,34,60,0.08);
+    }
+    header h1 { font-size: 1.6rem; letter-spacing: 0.4px; }
+
+    /* --- Page layout --- */
+    .container {
+      max-width: 1100px;
+      margin: 28px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* --- Gallery --- */
+    .gallery {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 6px 18px rgba(50,60,90,0.06);
+      min-height: 320px;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .meme {
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 160px;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .meme img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display:block;
+    }
+    .meme:hover { transform: translateY(-6px); box-shadow: 0 10px 30px rgba(29,34,63,0.12); }
+
+    .meme .caption {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 100%);
+      color: #fff;
+      font-size: 0.85rem;
+      padding: 6px 8px;
+      border-radius: 6px;
+      backdrop-filter: blur(2px);
+    }
+
+    /* --- Sidebar form --- */
+    aside.card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 6px 18px rgba(50,60,90,0.06);
+    }
+    aside h2 { font-size: 1.05rem; margin-bottom: 8px; color:#111; }
+    form label { display:block; font-size:0.86rem; margin:10px 0 6px; color:#333; }
+    form input[type="text"],
+    form input[type="email"],
+    form input[type="url"],
+    form select,
+    form textarea,
+    form input[type="file"],
+    form input[type="number"] {
+      width:100%;
+      padding:10px 12px;
+      border:1px solid #e3e6ef;
+      border-radius:8px;
+      background:#fff;
+      font-size:0.95rem;
+      outline: none;
+      transition: box-shadow .12s ease, border-color .12s ease;
+    }
+    form textarea { min-height:80px; resize:vertical; }
+    form input:focus, form textarea:focus, form select:focus { border-color:#6b7bd8; box-shadow:0 6px 18px rgba(107,123,216,0.12); }
+
+    .actions { display:flex; gap:8px; margin-top:12px; }
+    .btn {
+      padding:10px 12px; border-radius:8px; border:0; cursor:pointer; font-weight:600;
+    }
+    .btn-primary { background:#3a3f98; color:#fff; }
+    .btn-ghost { background:#f3f5ff; color:#3a3f98; border:1px solid #e6e9ff; }
+
+    /* --- Responsive --- */
+    @media (max-width: 880px) {
+      .container { grid-template-columns: 1fr; }
+      .gallery { order: 1; }
+      aside.card { order: 2; }
+    }
+
+    /* --- small footer --- */
+    footer { text-align:center; color:#6b6f86; font-size:0.86rem; padding:18px 6px; }
+  </style>
+</head>
+<body>
+
+  <!-- Meme Gallery Application -->
+  <header>
+    <h1>Meme Gallery</h1>
+  </header>
+
+  <main class="container">
+    <!-- Gallery -->
+    <section class="gallery" aria-labelledby="gallery-title">
+      <h2 id="gallery-title" style="font-size:1.0rem; margin-bottom:12px; color:#111;">Trending Memes</h2>
+
+      <div class="gallery-grid" id="galleryGrid">
+        <!-- Example memes -->
+        <figure class="meme">
+          <img src="https://i.imgflip.com/1bij.jpg" alt="Distracted Boyfriend meme">
+          <figcaption class="caption">Distracted Boyfriend</figcaption>
+        </figure>
+
+        <figure class="meme">
+          <img src="https://i.imgflip.com/26am.jpg" alt="One Does Not Simply meme">
+          <figcaption class="caption">One Does Not Simply</figcaption>
+        </figure>
+
+        <figure class="meme">
+          <img src="https://i.imgflip.com/30b1gx.jpg" alt="Drake Hotline Bling meme">
+          <figcaption class="caption">Drake Reaction</figcaption>
+        </figure>
+
+        <!-- More placeholders (can be dynamically added via JS) -->
+      </div>
+    </section>
+
+    <!-- Sidebar: Upload / Details -->
+    <aside class="card" aria-labelledby="upload-title">
+      <h2 id="upload-title">Submit a Meme</h2>
+
+      <form id="memeForm" enctype="multipart/form-data" novalidate>
+        <label for="memeTitle">Meme title</label>
+        <input id="memeTitle" name="memeTitle" type="text" placeholder="Funny cat..." required>
+
+        <label for="uploaderEmail">Your email</label>
+        <input id="uploaderEmail" name="email" type="email" placeholder="name@example.com">
+
+        <label for="memeUrl">Image URL (optional)</label>
+        <input id="memeUrl" name="memeUrl" type="url" placeholder="https://">
+
+        <label for="memeFile">Or upload image</label>
+        <input id="memeFile" name="memeFile" type="file" accept="image/*">
+
+        <label for="category">Category</label>
+        <select id="category" name="category">
+          <option value="funny">Funny</option>
+          <option value="animals">Animals</option>
+          <option value="gaming">Gaming</option>
+          <option value="wholesome">Wholesome</option>
+        </select>
+
+        <label for="desc">Description</label>
+        <textarea id="desc" name="description" placeholder="Describe the meme (optional)"></textarea>
+
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Add Meme</button>
+          <button class="btn btn-ghost" type="reset">Reset</button>
+        </div>
+      </form>
+    </aside>
+  </main>
+
+  <footer>
+    &copy; Meme Gallery — built with HTML & CSS
+  </footer>
+
+  <!-- Optional JS to enable client-side preview / add to gallery without server -->
+  <script>
+    const form = document.getElementById('memeForm');
+    const gallery = document.getElementById('galleryGrid');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById('memeTitle').value.trim() || 'User Meme';
+      const url = document.getElementById('memeUrl').value.trim();
+      const fileInput = document.getElementById('memeFile');
+
+      // Helper: create meme card
+      function addMeme(src, caption) {
+        const fig = document.createElement('figure');
+        fig.className = 'meme';
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = caption;
+        const cap = document.createElement('figcaption');
+        cap.className = 'caption';
+        cap.textContent = caption;
+        fig.appendChild(img);
+        fig.appendChild(cap);
+        gallery.prepend(fig); // add to top
+      }
+
+      if (url) {
+        addMeme(url, title);
+        form.reset();
+        return;
+      }
+
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          addMeme(reader.result, title);
+          form.reset();
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      // if neither provided, gently alert
+      alert('Please provide an image URL or upload a file.');
+    });
+  </script>
+
+</body>
+</html>
