@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Quiz & Trivia Site (HTML only)</title>
+<style>
+body { font-family: Arial, sans-serif; max-width:900px; margin:24px auto; line-height:1.5; }
+header { text-align:center; margin-bottom:18px; }
+.controls, .quiz, .result, .bank { border:1px solid #ddd; padding:14px; border-radius:8px; margin-bottom:12px; }
+.question { margin:12px 0; font-weight:600; }
+.options label { display:block; margin:6px 0; cursor:pointer; }
+.btn { padding:8px 12px; margin:6px 6px 0 0; cursor:pointer; border-radius:6px; border:1px solid #888; background:#f5f5f5; }
+.btn:active { transform:translateY(1px); }
+.hidden { display:none; }
+.score { font-size:1.2rem; font-weight:700; color:green; }
+.hint { color:#666; font-size:0.9rem; }
+.search { width:100%; padding:6px; margin-bottom:8px; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>Quiz & Trivia — HTML only</h1>
+<p class="hint">Interactive quiz demonstrating DOM methods and events (getElementById, querySelector, querySelectorAll, onclick, oninput, onchange).</p>
+</header>
+
+<section class="controls">
+<label for="catSelect">Choose Category:</label>
+<select id="catSelect" onchange="changeCategory()">
+<option value="all">All</option>
+<option value="general">General Knowledge</option>
+<option value="science">Science</option>
+<option value="tech">Technology</option>
+</select>
+
+<label for="filterSearch" style="margin-top:8px; display:block;">Search questions (live):</label>
+<input id="filterSearch" class="search" type="text" placeholder="Type to filter question text..." oninput="filterBank()" />
+
+<div style="margin-top:8px;">
+<button id="startBtn" class="btn" onclick="startQuiz()">Start Quiz</button>
+<button id="resetBtn" class="btn" onclick="resetQuiz()">Reset</button>
+<span id="qcount" style="margin-left:12px;"></span>
+</div>
+</section>
+
+<!-- Question Bank (hidden) - this demonstrates querySelectorAll and data attributes -->
+<section id="questionBank" class="bank hidden" aria-hidden="true">
+<!-- Each question is stored in the DOM as an element with data attributes -->
+<div class="qbitem" data-cat="general" data-q="Which planet is known as the Red Planet?">
+<input type="hidden" value='{"q":"Which planet is known as the Red Planet?","opts":["Earth","Mars","Jupiter","Venus"],"ans":1}' />
+</div>
+
+<div class="qbitem" data-cat="science" data-q="What is H2O commonly known as?">
+<input type="hidden" value='{"q":"What is H2O commonly known as?","opts":["Hydrogen","Oxygen","Water","Salt"],"ans":2}' />
+</div>
+
+<div class="qbitem" data-cat="tech" data-q="What does HTML stand for?">
+<input type="hidden" value='{"q":"What does HTML stand for?","opts":["Hyperlinks Text Markup Language","Hyper Text Markup Language","Home Tool Markup Language","Hyper Transfer Markup Language"],"ans":1}' />
+</div>
+
+<div class="qbitem" data-cat="general" data-q="Which animal is known as the King of the Jungle?">
+<input type="hidden" value='{"q":"Which animal is known as the King of the Jungle?","opts":["Tiger","Lion","Elephant","Giraffe"],"ans":1}' />
+</div>
+
+<div class="qbitem" data-cat="science" data-q="What force keeps us on the ground?">
+<input type="hidden" value='{"q":"What force keeps us on the ground?","opts":["Magnetism","Gravity","Friction","Electricity"],"ans":1}' />
+</div>
+</section>
+
+<!-- Quiz area -->
+<section id="quizArea" class="quiz hidden">
+<div id="progress" class="hint"></div>
+
+<div id="qbox">
+<!-- question HTML injected by JS -->
+</div>
+
+<div style="margin-top:10px;">
+<button class="btn" onclick="prevQ()">Previous</button>
+<button class="btn" onclick="nextQ()">Next</button>
+<button class="btn" onclick="submitAnswer()">Submit Answer</button>
+<button class="btn" onclick="endQuiz()">Finish & Show Score</button>
+</div>
+
+<div id="feedback" style="margin-top:10px;color:#0b6;"></div>
+</section>
+
+<!-- Result -->
+<section id="resultArea" class="result hidden">
+<h2>Result</h2>
+<div id="scoreText" class="score"></div>
+<div id="detailedResult"></div>
+<button class="btn" onclick="startQuiz()">Play Again</button>
+</section>
+
+<script>
+// Use getElementById and querySelector / querySelectorAll as required by the lab.
+const bankEl = document.getElementById('questionBank');
+const qbox = document.getElementById('qbox');
+const progress = document.getElementById('progress');
+const filterInput = document.getElementById('filterSearch');
+const catSelect = document.getElementById('catSelect');
+const qcountSpan = document.getElementById('qcount');
+
+// Load question objects from DOM hidden bank (demonstrates reading DOM nodes)
+function loadBank() {
+const items = document.querySelectorAll('#questionBank .qbitem');
+const arr = [];
+items.forEach(it => {
+// each qbitem contains a hidden input with JSON string
+const jsonInput = it.querySelector('input[type="hidden"]').value;
+const obj = JSON.parse(jsonInput);
+obj.cat = it.getAttribute('data-cat');
+arr.push(obj);
+});
+return arr;
+}
+
+// maintain filtered list and state
+let questionList = [];
+let currentIndex = 0;
+let userAnswers = []; // store selected index per question
+let started = false;
+
+// filter bank using oninput
+function filterBank() {
+const term = filterInput.value.trim().toLowerCase();
+const cat = catSelect.value;
+const all = loadBank();
+questionList = all.filter(q => {
+const matchCat = (cat === 'all') || (q.cat === cat);
+const matchText = q.q.toLowerCase().includes(term);
+return matchCat && (term === '' ? true : matchText);
+});
+qcountSpan.textContent = `${questionList.length} question(s) matched`;
+// If quiz already started, adjust
+if (started && questionList.length > 0) {
+// clamp currentIndex
+currentIndex = Math.min(currentIndex, questionList.length - 1);
+renderQuestion();
+}
+}
+
+// handle category change (onchange)
+function changeCategory() {
+filterBank(); // reuse filter logic which respects selected category
+}
+
+function startQuiz() {
+const all = loadBank();
+// default filters
+const term = filterInput.value.trim().toLowerCase();
+const cat = catSelect.value;
+questionList = all.filter(q => ((cat === 'all') || (q.cat === cat)) &&
+(term === '' || q.q.toLowerCase().includes(term)));
+if (questionList.length === 0) {
+alert('No questions available for the selected filters.');
+return;
+}
+started = true;
+currentIndex = 0;
+userAnswers = new Array(questionList.length).fill(null);
+document.getElementById('quizArea').classList.remove('hidden');
+document.getElementById('resultArea').classList.add('hidden');
+renderQuestion();
+qcountSpan.textContent = `${questionList.length} question(s) loaded`;
+}
+
+function renderQuestion() {
+const qobj = questionList[currentIndex];
+progress.textContent = `Question ${currentIndex + 1} of ${questionList.length} — Category: ${qobj.cat}`;
+// Build question HTML (demonstrates DOM manipulation)
+qbox.innerHTML = '';
+const qdiv = document.createElement('div');
+qdiv.className = 'question';
+qdiv.textContent = qobj.q;
+qbox.appendChild(qdiv);
+
+const optsDiv = document.createElement('div');
+optsDiv.className = 'options';
+qobj.opts.forEach((o,i) => {
+const id = 'opt_' + currentIndex + '_' + i;
+const label = document.createElement('label');
+label.htmlFor = id;
+label.innerHTML = `<input type="radio" name="ans_${currentIndex}" id="${id}" value="${i}" /> ${o}`;
+optsDiv.appendChild(label);
+});
+qbox.appendChild(optsDiv);
+
+// If user had selected earlier, restore selection (uses querySelector)
+if (userAnswers[currentIndex] !== null) {
+const sel = qbox.querySelector(`input[name="ans_${currentIndex}"][value="${userAnswers[currentIndex]}"]`);
+if (sel) sel.checked = true;
+}
+
+document.getElementById('feedback').textContent = '';
+}
+
+// Move next/prev
+function nextQ() {
+saveSelection();
+if (currentIndex < questionList.length - 1) {
+currentIndex++;
+renderQuestion();
+} else {
+alert('This is the last question.');
+}
+}
+function prevQ() {
+saveSelection();
+if (currentIndex > 0) {
+currentIndex--;
+renderQuestion();
+} else {
+alert('This is the first question.');
+}
+}
+
+// Save current selection using querySelectorAll to find radio inputs
+function saveSelection() {
+const radios = document.querySelectorAll(`#qbox input[type="radio"]`);
+let saved = null;
+radios.forEach(r => { if (r.checked) saved = parseInt(r.value); });
+userAnswers[currentIndex] = (saved === null ? null : saved);
+}
+
+// Submit answer for current question (onclick)
+function submitAnswer() {
+saveSelection();
+const qobj = questionList[currentIndex];
+const ans = userAnswers[currentIndex];
+if (ans === null) {
+document.getElementById('feedback').textContent = 'Please choose an option before submitting.';
+document.getElementById('feedback').style.color = '#c33';
+return;
+}
+if (ans === qobj.ans) {
+document.getElementById('feedback').textContent = 'Correct! ✅';
+document.getElementById('feedback').style.color = '#0b6';
+} else {
+document.getElementById('feedback').textContent = `Wrong. Correct answer: ${qobj.opts[qobj.ans]}`;
+document.getElementById('feedback').style.color = '#c33';
+}
+}
+
+// End quiz and show score
+function endQuiz() {
+saveSelection();
+const total = questionList.length;
+let score = 0;
+const details = [];
+questionList.forEach((q, idx) => {
+const user = userAnswers[idx];
+const correct = q.ans;
+if (user === correct) score++;
+details.push({
+q: q.q,
+selected: (user === null ? 'No answer' : q.opts[user]),
+correct: q.opts[correct]
+});
+});
+
+// Show result area
+document.getElementById('quizArea').classList.add('hidden');
+document.getElementById('resultArea').classList.remove('hidden');
+document.getElementById('scoreText').textContent = `Score: ${score} / ${total}`;
+const detDiv = document.getElementById('detailedResult');
+detDiv.innerHTML = '';
+details.forEach((d,i) => {
+const p = document.createElement('p');
+p.innerHTML = `<strong>Q${i+1}:</strong> ${d.q} <br/><strong>Your answer:</strong> ${d.selected} <br/><strong>Correct:</strong> ${d.correct}`;
+detDiv.appendChild(p);
+});
+}
+
+function resetQuiz() {
+// reset filters and UI
+filterInput.value = '';
+catSelect.value = 'all';
+questionList = [];
+currentIndex = 0;
+userAnswers = [];
+started = false;
+document.getElementById('quizArea').classList.add('hidden');
+document.getElementById('resultArea').classList.add('hidden');
+qcountSpan.textContent = '';
+document.getElementById('feedback').textContent = '';
+}
+
+// initial info: show count of total questions in bank (uses querySelectorAll)
+(function init() {
+const total = document.querySelectorAll('#questionBank .qbitem').length;
+qcountSpan.textContent = `${total} total questions in bank (use filters to pick).`;
+})();
+</script>
+
+</body>
+</html> 
