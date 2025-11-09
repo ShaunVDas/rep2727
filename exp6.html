@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Quiz & Trivia — Utility Tools (Exp 6)</title>
+
+  <!-- jQuery CDN (as PDF suggests using local copy; CDN works fine for lab/demo) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <style>
+    /* Simple clean styling for a lab demo */
+    :root { font-family: Arial, Helvetica, sans-serif; --accent:#2b7cff; --muted:#666; }
+    body { margin:0; padding:20px; background:#f6f9ff; color:#222; }
+    header { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+    header h1 { margin:0; font-size:20px; }
+    .container { max-width:1000px; margin:0 auto; }
+    .card { background:white; border-radius:8px; box-shadow:0 4px 12px rgba(20,20,60,0.06); padding:16px; margin-bottom:18px; }
+    h2 { margin-top:0; }
+    label { display:block; font-size:13px; margin:8px 0 4px; color:var(--muted); }
+    input[type="number"], input[type="text"], select { padding:8px; width:220px; border-radius:6px; border:1px solid #ddd; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+    button { background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    button.secondary { background:#666; }
+    .result { padding:8px; border-radius:6px; background:#f2f7ff; border:1px dashed #cfe0ff; min-width:260px; }
+    .small { font-size:13px; color:var(--muted); margin-top:6px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:800px){ .grid{grid-template-columns:1fr} input[type="number"], input[type="text"], select { width:100%; } .result{min-width:unset} }
+    footer { text-align:center; margin-top:10px; color:var(--muted); font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <img src="" alt="" style="width:48px;height:48px;background:linear-gradient(45deg,#2b7cff,#6ad1ff);border-radius:8px;">
+      <div>
+        <h1>Quiz & Trivia — Lab Utilities (Exp 6)</h1>
+        <div class="small">Three client-side utilities implemented with jQuery (Budget / Cake-order / GST)</div>
+      </div>
+    </header>
+
+    <!-- Section 1: Budget Calculator (Q1) -->
+    <section class="card" id="budget-card">
+      <h2>1) Prize Fund Budget Divider (Budget Calculator)</h2>
+      <p class="small">Used as part of a Quiz site to divide prize fund into: Room rent, Accessories, Emergency, Saving (percentages). If the given amount cannot be divided into integers using given % parts, an alert will show (per lab requirement).</p>
+
+      <div class="row">
+        <label for="totalAmount">Total Prize Fund (INR)</label>
+        <input id="totalAmount" type="number" min="0" value="10000" />
+      </div>
+
+      <div class="row">
+        <label for="rentPerc">Room Rent (%)</label>
+        <input id="rentPerc" type="number" min="0" max="100" value="40" />
+        <label for="accPerc">Accessories (%)</label>
+        <input id="accPerc" type="number" min="0" max="100" value="30" />
+        <label for="emPerc">Emergency (%)</label>
+        <input id="emPerc" type="number" min="0" max="100" value="20" />
+        <label for="savePerc">Saving (%)</label>
+        <input id="savePerc" type="number" min="0" max="100" value="10" />
+      </div>
+
+      <div class="row">
+        <button id="evalMoney">Evaluate My Money</button>
+        <button id="budgetReset" class="secondary">Reset</button>
+      </div>
+
+      <div class="row">
+        <div class="result" id="budgetResult">
+          <strong>Results will appear here.</strong>
+          <div id="budgetBreakdown" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Cake Order Calculation (Q2) -->
+    <section class="card" id="cake-card">
+      <h2>2) Quiz Celebration Cake Order (Cake Order Calculator)</h2>
+      <p class="small">Sample cake-order tool for a quiz/trivia celebration — calculates cost using jQuery actions (change/click/val/html).</p>
+
+      <div class="grid">
+        <div>
+          <label for="cakeSize">Cake Size</label>
+          <select id="cakeSize">
+            <option value="">-- Select Size --</option>
+            <option value="500">Small (6") — ₹500</option>
+            <option value="900">Medium (8") — ₹900</option>
+            <option value="1500">Large (10") — ₹1500</option>
+          </select>
+
+          <label for="flavour">Flavor</label>
+          <select id="flavour">
+            <option value="0">No extra cost</option>
+            <option value="100">Chocolate (+₹100)</option>
+            <option value="150">Red Velvet (+₹150)</option>
+            <option value="80">Butterscotch (+₹80)</option>
+          </select>
+
+          <label for="candles">Candles (per set ₹20)</label>
+          <input id="candles" type="number" min="0" value="1"/>
+        </div>
+
+        <div>
+          <label for="delivery">Delivery Option</label>
+          <select id="delivery">
+            <option value="0">Pickup (Free)</option>
+            <option value="60">Local Delivery (+₹60)</option>
+            <option value="150">Express Delivery (+₹150)</option>
+          </select>
+
+          <label>&nbsp;</label>
+          <div class="row">
+            <button id="calcCake">Calculate Order</button>
+            <button id="resetCake" class="secondary">Reset</button>
+          </div>
+          <div class="result" id="cakeResult" style="margin-top:10px;">
+            <strong>Order summary will appear here.</strong>
+            <div id="cakeBreakdown" style="margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: GST Calculator (Q3) -->
+    <section class="card" id="gst-card">
+      <h2>3) GST Calculator (Quiz Merchandise)</h2>
+      <p class="small">Calculates GST amount and totals for merch sold during quiz events. Uses number box & dropdown; demonstrates change/keyup/click.</p>
+
+      <div class="row">
+        <label for="baseAmount">Amount (₹)</label>
+        <input id="baseAmount" type="number" min="0" value="1000" />
+      </div>
+
+      <div class="row">
+        <label for="gstRate">GST Rate</label>
+        <select id="gstRate">
+          <option value="">Select GST %</option>
+          <option value="5">5%</option>
+          <option value="12">12%</option>
+          <option value="18">18%</option>
+          <option value="28">28%</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <button id="computeGST">Compute GST</button>
+        <button id="gstReset" class="secondary">Reset</button>
+      </div>
+
+      <div class="row">
+        <div class="result" id="gstResult">
+          <div><strong>Actual Amount:</strong> <span id="actualAmt">-</span></div>
+          <div><strong>GST Amount:</strong> <span id="gstAmt">-</span></div>
+          <div><strong>Total Amount:</strong> <span id="totalAmt">-</span></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="small card">
+      Implementation notes: All actions are client-side using jQuery methods: <code>val()</code>, <code>html()</code>, <code>click()</code>, <code>change()</code>, <code>keyup()</code>.
+    </footer>
+  </div>
+
+  <script>
+    // jQuery code starts here (per PDF instruction)
+    $(document).ready(function () {
+
+      /* -------------------------
+         Section 1: Budget Calculator
+         ------------------------- */
+
+      // Helper: format INR integer
+      function formatINR(n) {
+        return "₹ " + parseFloat(n).toFixed(2);
+      }
+
+      $("#evalMoney").click(function () {
+        // Read values using val()
+        const total = Number($("#totalAmount").val());
+        const r = Number($("#rentPerc").val());
+        const a = Number($("#accPerc").val());
+        const e = Number($("#emPerc").val());
+        const s = Number($("#savePerc").val());
+
+        // Verify percentages sum to 100 (reasonable check) else show alert
+        const sumPerc = r + a + e + s;
+        if (sumPerc !== 100) {
+          alert("Percentages must sum to 100%. Current sum: " + sumPerc + "%. Please correct.");
+          $("#budgetBreakdown").html(""); // clear result
+          return;
+        }
+
+        // Division test: each share = total * (perc/100) -> we require result to be integer rupee (no paise)
+        const rentShare = total * r / 100;
+        const accShare  = total * a / 100;
+        const emShare   = total * e / 100;
+        const saveShare = total * s / 100;
+
+        // If any share is not an integer (i.e., not divisible cleanly into rupees), alert per lab requirement.
+        // We'll check to two decimal places: accept if fractional part is near 0.
+        function isCleanCurrency(x) {
+          return Math.abs(x - Math.round(x)) < 1e-9;
+        }
+
+        if (!isCleanCurrency(rentShare) || !isCleanCurrency(accShare) || !isCleanCurrency(emShare) || !isCleanCurrency(saveShare)) {
+          alert("Given total amount cannot be divided evenly into integer rupee shares for the given percentages. Adjust amount or percentages.");
+          $("#budgetBreakdown").html("");
+          return;
+        }
+
+        // All good: display using html()
+        const out = `
+          <div>Room Rent (${r}%): <strong>${formatINR(rentShare)}</strong></div>
+          <div>Accessories (${a}%): <strong>${formatINR(accShare)}</strong></div>
+          <div>Emergency (${e}%): <strong>${formatINR(emShare)}</strong></div>
+          <div>Saving (${s}%): <strong>${formatINR(saveShare)}</strong></div>
+        `;
+        $("#budgetBreakdown").html(out);
+      });
+
+      $("#budgetReset").click(function () {
+        $("#totalAmount").val(10000);
+        $("#rentPerc").val(40); $("#accPerc").val(30); $("#emPerc").val(20); $("#savePerc").val(10);
+        $("#budgetBreakdown").html("");
+      });
+
+      /* -------------------------
+         Section 2: Cake Order Calculator
+         ------------------------- */
+
+      // Recalculate live (example use of change() and keyup())
+      $("#cakeSize, #flavour, #candles, #delivery").change(function () {
+        // show a small live preview
+        const size = Number($("#cakeSize").val() || 0);
+        const flav = Number($("#flavour").val() || 0);
+        const candles = Number($("#candles").val() || 0);
+        const delivery = Number($("#delivery").val() || 0);
+        const previewTotal = size + flav + (candles * 20) + delivery;
+        $("#cakeBreakdown").html(`<div class="small">Live total preview: <strong>${formatINR(previewTotal)}</strong></div>`);
+      });
+
+      // Also respond to keyup on candles
+      $("#candles").keyup(function () {
+        $("#candles").trigger("change");
+      });
+
+      $("#calcCake").click(function () {
+        const size = Number($("#cakeSize").val());
+        if (!size) { alert("Please select cake size."); return; }
+        const flavour = Number($("#flavour").val());
+        const candles = Number($("#candles").val() || 0);
+        const delivery = Number($("#delivery").val());
+
+        const candlesCost = candles * 20;
+        const subtotal = size + flavour + candlesCost;
+        const total = subtotal + delivery;
+
+        const out = `
+          <div>Base (size): <strong>${formatINR(size)}</strong></div>
+          <div>Flavor add-on: <strong>${formatINR(flavour)}</strong></div>
+          <div>Candles (${candles} set): <strong>${formatINR(candlesCost)}</strong></div>
+          <div>Delivery: <strong>${formatINR(delivery)}</strong></div>
+          <hr>
+          <div><strong>GRAND TOTAL: ${formatINR(total)}</strong></div>
+        `;
+        $("#cakeBreakdown").html(out);
+      });
+
+      $("#resetCake").click(function () {
+        $("#cakeSize").val("");
+        $("#flavour").val("0");
+        $("#candles").val(1);
+        $("#delivery").val("0");
+        $("#cakeBreakdown").html("");
+      });
+
+      /* -------------------------
+         Section 3: GST Calculator
+         ------------------------- */
+
+      // compute on click
+      $("#computeGST").click(function () {
+        const amt = Number($("#baseAmount").val() || 0);
+        const rate = Number($("#gstRate").val() || 0);
+        if (!rate) { alert("Please select GST rate."); return; }
+        const gstAmount = (amt * rate) / 100;
+        const totalAmt = amt + gstAmount;
+
+        // display using html()
+        $("#actualAmt").html(formatINR(amt));
+        $("#gstAmt").html(formatINR(gstAmount));
+        $("#totalAmt").html(formatINR(totalAmt));
+      });
+
+      // live update if user changes amount or gst selection (use change & keyup)
+      $("#gstRate").change(function () { $("#computeGST").trigger("click"); });
+      $("#baseAmount").keyup(function () { $("#computeGST").trigger("click"); });
+
+      $("#gstReset").click(function () {
+        $("#baseAmount").val(1000);
+        $("#gstRate").val("");
+        $("#actualAmt").html("-");
+        $("#gstAmt").html("-");
+        $("#totalAmt").html("-");
+      });
+
+    }); // end document.ready
+  </script>
+</body>
+</html>
